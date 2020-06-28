@@ -1,9 +1,10 @@
 from django.urls import path
-from .views import SubscriberAPI, Confirm, Delete
+from .views import SubscriberAPI, SubConfirm, SubDelete
 
 urlpatterns = [
+    path('auth/login', LoginAPI.as_view(), name="login"),
     path('subsriber/', SubscriberCreate.as_view(), name="sub-create"),
     path('', SubscriberList.as_view(), name="sub-list"),
-    path('confirm/', Confirm, name="sub-confirm"),
-    path('delete/', Delete, name="sub-del"),
+    path('confirm/', SubConfirm, name="sub-confirm"),
+    path('delete/', SubDelete, name="sub-del"),
 ]

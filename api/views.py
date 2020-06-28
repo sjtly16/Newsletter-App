@@ -1,64 +1,78 @@
 from django.shortcuts import render
-from rest_framework import viewsets, permissions, generics, status
-from rest_framework.response import Response
-from rest_framework.reverse import reverse
-from rest_framework.parsers import MultiPartParser, FormParser
-from .serializers import SubscriberSerializer
-from .models import Subscriber
-import jwt
+from django.core.mail import EmailMultiAlternatives
 from django.conf import settings
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail
+from rest_framework.views import APIView
+from rest_framework import permissions, generics, status
+from rest_framework.response import Response
+from django.conf import settings
+from knox.models import AuthToken
 
-class SubscriberAPI(generics.ListCreateAPIView):
-    queryset = Subsriber.objects.all()
-    permission_classes = [permissions.AllowAny, ]
-    serializer_class = SubscriberSerializer
+#login API
+class LoginAPI(generics.GenericAPIView):
+    serializer_class = LoginUserSerializer
 
-    def create(self, request, *args, **kwargs):
-        queryset=self.get_queryset()
-        serializer = SubscriberSerializer(queryset, data=request.data)
-        
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
-            email = request.POST['email']
-            token = jwt.encode({'subscriber': email }, key='secret', algorithm='HS256')
-            subscriber = Subscriber(email=email, token=token)
-            subscriber.save()
-            message = Mail(
-                from_email=settings.FROM_EMAIL,
-                to_emails=email,
-                subject='Newsletter Confirmation',
-                html_content='Thank you for signing up for DSC KIET email newsletter! \
-                Please complete the process by \
-                <a href="{}/confirm/?email={}&token={}"> clicking here to \
-                confirm your registration</a>.'.format(request.build_absolute_uri('/confirm/'),
-                                                       email,
-                                                       token))
-            sg = SendGridAPIClient(settings.SENDGRID_API_KEY)
-            response = sg.send(message)
+            user = serializer.validated_data
+            token = AuthToken.objects.create(user)[1]
             return Response({
                 "error": False,
                 "message": "success",
-                "data": serializer.data,
-                "email-response":[
-                    response.status_code,
-                    response.body,
-                    response.headers, 
-                ]
-            }, status=status.HTTP_200_OK)
-        
+                "user": LoginUserSerializer(user, context=self.get_serializer_context()).data,
+                "token": token
+            })
         else:
             return Response({
                 "error": True,
                 "message": serializer.errors,
             }, status=status.HTTP__400_BAD_REQUEST)
 
-    def list(self, request, *args, **kwargs):
-        queryset=self.get_queryset()
-        serializer = SubscriberSerializer(queryset, many=True)
-        return Response({
-            "error": False,
-            "message": "list of all subscribers"
-            "data": serializer.data,
-        }, status=status.HTTP_200_OK)
-        
+
+
+
+class SendMailAPI(APIView):
+    permission_classes = [AllowAny,]
+    def post(self, request, format=None):
+        serializer = EmailSerializer(data=request.data)
+        if serializer.is_valid():
+            subject = request.data['subject']
+            html_content = request.data['content']
+            recipents = request.data['recipents']
+            email_count = len(recipents)
+
+            if len(email_count)>50:
+                batches = [recipents[i:i + 50] for i in range(0, email_count, 50)]
+                for batch in batches:
+                    msg = EmailMessage(subject, html_content,
+                                    settings.EMAIL_HOST_USER, bcc=batch, fail_silently=False)
+                    msg.content_subtype = "html"  # Main content is now text/html
+                    email_response = msg.send()
+                return Response({
+                    "error":False,
+                    "message": "Success",
+                    "email_response": email_response,
+                }, status=status.HTTP_200_OK)    
+
+            else:
+                msg = EmailMessage(subject, html_content,
+                                settings.EMAIL_HOST_USER, bcc=recipents, fail_silently=False)
+                msg.content_subtype = "html"  # Main content is now text/html
+                email_response = msg.send()
+                return Response({
+                    "error": False,
+                    "message": "Success",
+                    "email_response": email_response,
+                }, status=status.HTTP_200_OK)
+        else:
+            return Response({
+                "error": True,
+                "message": serializer.errors,
+            }, status=status.HTTP__400_BAD_REQUEST)
+
+    
+
+
+            
+
+
