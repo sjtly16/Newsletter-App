@@ -6,6 +6,17 @@ from rest_framework import permissions, generics, status
 from rest_framework.response import Response
 from django.conf import settings
 from knox.models import AuthToken
+from .serializers import LoginUserSerializer, EmailSerializer
+
+class ApiRoot(generics.ListAPIView):
+    permission_classes = (permissions.AllowAny,)
+
+    def list(self, request, format=None):
+        return Response({
+            'SendMailAPI': reverse('email', request=request, format=format),
+            'Login': reverse('login', request=request, format=format),
+            'Logout': reverse('knox_logout', request=request, format=format),
+        })
 
 #login API
 class LoginAPI(generics.GenericAPIView):
