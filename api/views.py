@@ -32,17 +32,17 @@ class LoginAPI(generics.GenericAPIView):
 
 
 class SendMailAPI(APIView):
-    permission_classes = [AllowAny,]
+    permission_classes = [permissions.AllowAny,]
     def post(self, request, format=None):
         serializer = EmailSerializer(data=request.data)
         if serializer.is_valid():
             subject = request.data['subject']
             html_content = request.data['content']
-            recipents = request.data['recipents']
+            recipients = request.data['recipients']
             email_count = len(recipents)
 
             if len(email_count)>50:
-                batches = [recipents[i:i + 50] for i in range(0, email_count, 50)]
+                batches = [recipients[i:i + 50] for i in range(0, email_count, 50)]
                 for batch in batches:
                     msg = EmailMessage(subject, html_content,
                                     settings.EMAIL_HOST_USER, bcc=batch, fail_silently=False)
@@ -56,7 +56,7 @@ class SendMailAPI(APIView):
 
             else:
                 msg = EmailMessage(subject, html_content,
-                                settings.EMAIL_HOST_USER, bcc=recipents, fail_silently=False)
+                                settings.EMAIL_HOST_USER, bcc=recipients, fail_silently=False)
                 msg.content_subtype = "html"  # Main content is now text/html
                 email_response = msg.send()
                 return Response({
