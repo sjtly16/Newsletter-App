@@ -3,6 +3,7 @@ from django.contrib.auth.base_user import BaseUserManager
 from django.utils.translation import ugettext_lazy as _
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.contrib.postgres.fields import ArrayField
 
 class CustomUserManager(BaseUserManager):
     """
@@ -48,4 +49,14 @@ class CustomUser(AbstractUser):
 
     def __str__(self):
         return self.email
+
+class Newsletter(models.Model):
+    subject = models.CharField(max_length=540, blank=False)
+    content = models.TextField(blank=False)
+    recipients = ArrayField(models.EmailField(), blank=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    def __str__(self):
+        return self.subject
+
 
