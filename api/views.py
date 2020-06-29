@@ -4,10 +4,11 @@ from django.conf import settings
 from rest_framework.views import APIView
 from rest_framework import permissions, generics, status
 from rest_framework.response import Response
+from rest_framework.reverse import reverse
 from django.conf import settings
 from knox.models import AuthToken
 from .serializers import LoginUserSerializer, EmailSerializer
-
+from .models import Newsletter
 class ApiRoot(generics.ListAPIView):
     permission_classes = (permissions.AllowAny,)
 
@@ -37,15 +38,17 @@ class LoginAPI(generics.GenericAPIView):
             return Response({
                 "error": True,
                 "message": serializer.errors,
-            }, status=status.HTTP__400_BAD_REQUEST)
+            }, status=status.HTTP_400_BAD_REQUEST)
 
 
 
 
-class SendMailAPI(APIView):
+class SendMailAPI(generics.GenericAPIView):
+    queryset = Newsletter.objects.all()
     permission_classes = [permissions.AllowAny,]
-    def post(self, request, format=None):
-        serializer = EmailSerializer(data=request.data)
+    serializer_class = EmailSerializer
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             subject = request.data['subject']
             html_content = request.data['content']
@@ -79,7 +82,7 @@ class SendMailAPI(APIView):
             return Response({
                 "error": True,
                 "message": serializer.errors,
-            }, status=status.HTTP__400_BAD_REQUEST)
+            }, status=status.HTTP_400_BAD_REQUEST)
 
     
 
