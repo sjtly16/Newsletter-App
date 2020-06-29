@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
-
+from .models import Newsletter
 
 class LoginUserSerializer(serializers.Serializer):
     email = serializers.EmailField()
@@ -14,12 +14,17 @@ class LoginUserSerializer(serializers.Serializer):
             "Unable to log in with provided credentials.")
 
 
-class EmailSerializer(serializers.Serializer):
-    subject = serializers.CharField(max_length=100, required=False, allow_blank=True)
-    content = serializers.CharField(max_length=None, allow_blank=False)
-    recipients = serializers.ListField(
-        child = serializers.EmailField(max_length=None, min_length=None, allow_blank=False)
-    )
-
+class EmailSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = Newsletter
+        fields = [
+            'id',
+            'subject',
+            'content',
+            'recipients',
+            'created_at',
+            'updated_at',
+        ]
 
     
