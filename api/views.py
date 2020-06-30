@@ -1,7 +1,7 @@
 from django.shortcuts import render
-from django.core.mail import EmailMultiAlternatives
+from django.core.mail import EmailMessage
 from django.conf import settings
-from rest_framework.views import APIView
+from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework import permissions, generics, status
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
@@ -47,19 +47,19 @@ class SendMailAPI(generics.GenericAPIView):
     queryset = Newsletter.objects.all()
     permission_classes = [permissions.AllowAny,]
     serializer_class = EmailSerializer
+    parser_classes = (MultiPartParser, FormParser)
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             subject = request.data['subject']
-            html_content = request.data['content']
-            recipients = request.data['recipients']
-            email_count = len(recipents)
-
-            if len(email_count)>50:
+            html_content = request.FILES['content'].read().decode('utf-8')
+            recipients = request.data.getlist('recipients')
+            email_count = len(recipients)
+            if email_count>50:
                 batches = [recipients[i:i + 50] for i in range(0, email_count, 50)]
                 for batch in batches:
                     msg = EmailMessage(subject, html_content,
-                                    settings.EMAIL_HOST_USER, bcc=batch, fail_silently=False)
+                                       from_email="team@dsckiet.com", bcc=batch)
                     msg.content_subtype = "html"  # Main content is now text/html
                     email_response = msg.send()
                 return Response({
@@ -70,7 +70,7 @@ class SendMailAPI(generics.GenericAPIView):
 
             else:
                 msg = EmailMessage(subject, html_content,
-                                settings.EMAIL_HOST_USER, bcc=recipients, fail_silently=False)
+                                   from_email='team@dsckiet.com', bcc=recipients)
                 msg.content_subtype = "html"  # Main content is now text/html
                 email_response = msg.send()
                 return Response({
