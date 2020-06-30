@@ -52,7 +52,7 @@ class CustomUser(AbstractUser):
 
 class Newsletter(models.Model):
     subject = models.CharField(max_length=540, blank=False)
-    content = models.TextField(blank=False)
+    content = models.FileField(upload_to='templates/')
     recipients = ArrayField(models.EmailField(), blank=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
