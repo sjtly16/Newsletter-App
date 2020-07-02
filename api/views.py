@@ -45,7 +45,7 @@ class LoginAPI(generics.GenericAPIView):
 
 class SendMailAPI(generics.GenericAPIView):
     queryset = Newsletter.objects.all()
-    permission_classes = [permissions.AllowAny,]
+    permission_classes = [permissions.IsAuthenticated,]
     serializer_class = EmailSerializer
     parser_classes = (MultiPartParser, FormParser)
     def post(self, request, *args, **kwargs):
