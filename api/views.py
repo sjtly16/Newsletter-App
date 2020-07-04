@@ -45,7 +45,7 @@ class LoginAPI(generics.GenericAPIView):
 
 class SendMailAPI(generics.GenericAPIView):
     queryset = Newsletter.objects.all()
-    permission_classes = [permissions.IsAuthenticated,]
+    permission_classes = [permissions.AllowAny,]
     serializer_class = EmailSerializer
     parser_classes = (MultiPartParser, FormParser)
     def post(self, request, *args, **kwargs):
@@ -59,7 +59,11 @@ class SendMailAPI(generics.GenericAPIView):
                 batches = [recipients[i:i + 50] for i in range(0, email_count, 50)]
                 for batch in batches:
                     msg = EmailMessage(subject, html_content,
-                                       from_email="team@dsckiet.com", bcc=batch)
+                                       from_email="team@dsckiet.com", bcc=batch, headers={
+                                           "x-priority": "1",
+                                           "x-msmail-priority": "High",
+                                           importance: "high"
+                                       })
                     msg.content_subtype = "html"  # Main content is now text/html
                     email_response = msg.send()
                 return Response({
@@ -70,7 +74,11 @@ class SendMailAPI(generics.GenericAPIView):
 
             else:
                 msg = EmailMessage(subject, html_content,
-                                   from_email='team@dsckiet.com', bcc=recipients)
+                                   from_email='team@dsckiet.com', bcc=recipients, headers={
+                                       "x-priority": "1",
+                                       "x-msmail-priority": "High",
+                                       importance: "high"
+                                   })
                 msg.content_subtype = "html"  # Main content is now text/html
                 email_response = msg.send()
                 return Response({
