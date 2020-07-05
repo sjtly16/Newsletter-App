@@ -62,7 +62,7 @@ class SendMailAPI(generics.GenericAPIView):
                                        from_email="team@dsckiet.com", bcc=batch, headers={
                                            "x-priority": "1",
                                            "x-msmail-priority": "High",
-                                           importance: "high"
+                                        
                                        })
                     msg.content_subtype = "html"  # Main content is now text/html
                     email_response = msg.send()
@@ -77,7 +77,7 @@ class SendMailAPI(generics.GenericAPIView):
                                    from_email='team@dsckiet.com', bcc=recipients, headers={
                                        "x-priority": "1",
                                        "x-msmail-priority": "High",
-                                       importance: "high"
+                                       
                                    })
                 msg.content_subtype = "html"  # Main content is now text/html
                 email_response = msg.send()
