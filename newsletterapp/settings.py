@@ -145,7 +145,7 @@ EMAIL_PORT = 587
 db_from_env = dj_database_url.config(conn_max_age=500)
 DATABASES['default'].update(db_from_env)
 
-CELERY_BROKER_URL = 'redis://h:p8319ff37eff9ff4d6a81ae1002898621d16038e65e8ef3921781e68b4bb2a98d@ec2-18-232-246-26.compute-1.amazonaws.com:30209'
+CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URI')
 CELERY_ACCEPT_CONTENT = ['json', ]
 CELERY_TASK_SERIALIZER = 'json'
   
